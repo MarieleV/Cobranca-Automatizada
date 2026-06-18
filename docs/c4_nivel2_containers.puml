@@ -1,0 +1,54 @@
+@startuml C4_Nivel2_Containers
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Diagrama de Containers — Plataforma de Cobrança Automatizada [Nível 2]
+
+' ─── Pessoas ──────────────────────────────────────────────────────────────────
+Person(analista, "Analista de Cobrança", "Importa lotes e monitora\ndisparos via portal web.")
+Person(gestor, "Gestor Financeiro", "Configura régua e analisa\nmétrictas no dashboard.")
+Person(admin, "Administrador", "Gerencia usuários e\npermissões do sistema.")
+
+' ─── Boundary do Sistema ──────────────────────────────────────────────────────
+System_Boundary(plataforma, "Plataforma de Cobrança Automatizada") {
+
+    Container(frontend, "Frontend (SPA)", "React 18 + Vite", "Interface web para interação do usuário.\nConsome a REST API via HTTPS/JSON.\nHospedado em container Docker.")
+
+    Container(api, "API Backend", "Python 3.11 · FastAPI", "Expõe rotas REST, gerencia autenticação\nJWT e publica mensagens na fila.\nValida inputs com Pydantic.")
+
+    Container(worker, "Worker de Processamento", "Python · Celery", "Consome mensagens da fila, processa\narquivos com pandas e persiste os\ndados validados no PostgreSQL.\nCelery Beat agenda jobs recorrentes.")
+
+    Container(broker, "Broker de Mensagens", "RabbitMQ · AMQP", "Desacopla o upload do arquivo\ndo processamento real.\nGarante durabilidade das mensagens.")
+
+    ContainerDb(postgres, "Banco de Dados Principal", "PostgreSQL 15", "Persistência de devedores, regras de\ncobrança, jobs e logs de comunicação.")
+
+    ContainerDb(redis, "Cache / Session Store", "Redis", "Cache de sessões JWT e resultados\ntemporários de jobs em execução.")
+
+    Container(observ, "Observabilidade", "Prometheus + Grafana", "Coleta métricas via /metrics (HTTP)\ne exibe dashboards Grafana.\nAlertas de performance e disponibilidade.")
+}
+
+' ─── Sistemas Externos ────────────────────────────────────────────────────────
+System_Ext(sendgrid, "SendGrid / AWS SES", "API de disparo de\ne-mails transacionais.")
+System_Ext(twilio, "Twilio / AWS SNS", "API de disparo de\nSMS transacionais.")
+
+' ─── Relações — Usuários → Containers ────────────────────────────────────────
+Rel(analista, frontend, "Acessa o portal web.\nFaz upload de lotes CSV.", "HTTPS")
+Rel(gestor, frontend, "Configura régua e\nvisualiza métricas.", "HTTPS")
+Rel(admin, frontend, "Gerencia usuários\ne permissões.", "HTTPS")
+
+' ─── Relações — Containers internos ──────────────────────────────────────────
+Rel(frontend, api, "Faz requisições à API.", "JSON / HTTPS")
+Rel(api, broker, "Publica mensagem de\nprocessamento de lote.", "AMQP")
+Rel(broker, worker, "Entrega mensagem\npara processamento.", "AMQP")
+Rel(api, postgres, "Lê e escreve registros\nde usuários, regras e jobs.", "SQL / SQLAlchemy")
+Rel(worker, postgres, "Persiste devedores validados\ne logs de comunicação.", "SQL / SQLAlchemy")
+Rel(api, redis, "Armazena e valida\nsessões JWT.", "Redis protocol")
+Rel(api, observ, "Expõe métricas de\nperformance e erros.", "HTTP /metrics")
+Rel(worker, observ, "Expõe métricas de\njobs e disparos.", "HTTP /metrics")
+
+' ─── Relações — Containers → Sistemas Externos ───────────────────────────────
+Rel(worker, sendgrid, "Envia e-mails de cobrança\naos devedores.", "HTTPS / REST")
+Rel(worker, twilio, "Envia SMS de cobrança\naos devedores.", "HTTPS / REST")
+
+@enduml

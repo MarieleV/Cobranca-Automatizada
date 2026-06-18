@@ -1,0 +1,89 @@
+@startuml C4_Nivel3_Componentes
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+title Diagrama de Componentes — API Backend (FastAPI) [Nível 3]
+
+' ─── 1. TOPO: Frontend ────────────────────────────────────────────────────────
+Container(frontend, "Frontend (SPA)", "React 18 + Vite", "Interface web. Faz requisições\nà API via JSON/HTTPS.")
+
+' ─── 2. MEIO: Boundary do Container API Backend ──────────────────────────────
+Container_Boundary(api, "API Backend · Python 3.11 / FastAPI") {
+
+    ' === CAMADA 1: CONTROLLERS (Routers) ===
+    Component(batchRouter, "BatchRouter", "FastAPI · APIRouter", "POST /batches/upload\nGET  /batches/{id}/report\nGET  /batches\nValida e delega ao BatchService.")
+    Component(rulesRouter, "RulesRouter", "FastAPI · APIRouter", "POST /rules\nPUT  /rules/{id}\nGET  /rules\nValida e delega ao NotificationService.")
+    Component(jobsRouter, "JobsRouter", "FastAPI · APIRouter", "GET /jobs\nGET /jobs/{id}/log\nGET /jobs/{id}/metrics\nDelega ao JobService.")
+    Component(authRouter, "AuthRouter", "FastAPI · APIRouter", "POST /auth/login\nPOST /auth/refresh\nDELETE /auth/logout\nDelega ao AuthService.")
+
+    ' === CAMADA 2: SERVICES ===
+    Component(batchService, "BatchService", "Python Class", "valida_arquivo()\npublica_na_fila()\nget_relatorio()\nOrquestra Repositories e BrokerClient.")
+    Component(notifService, "NotificationService", "Python Class", "seleciona_devedores()\ndispara_comunicacao()\nOrquestra Repo, Email e SMS Clients.")
+    Component(jobService, "JobService", "Python Class", "get_jobs_ativos()\nget_log_execucao()\nget_metricas()\nOrquestra CommunicationRepository.")
+    Component(authService, "AuthService", "Python Class", "autenticar_usuario()\ngerar_jwt()\nvalidar_token()\nUsa Redis para sessões JWT.")
+
+    ' === CAMADA 3: REPOSITORIES ===
+    Component(batchRepo, "BatchRepository", "SQLAlchemy ORM", "save_batch() · get_batch()\nsave_error() · get_errors()")
+    Component(debtorRepo, "DebtorRepository", "SQLAlchemy ORM", "save_debtor() · get_eligible()\nupdate_status()")
+    Component(commRepo, "CommunicationRepository", "SQLAlchemy ORM", "save_communication()\nget_history() · update_status()")
+
+    ' === CAMADA 4: CLIENTS ===
+    Component(emailClient, "EmailClient", "Python · httpx", "send_email(to, template)\nEncapsula API SendGrid/SES.")
+    Component(smsClient, "SMSClient", "Python · httpx", "send_sms(phone, body)\nEncapsula API Twilio/SNS.")
+    Component(brokerClient, "BrokerClient", "Python · pika", "publish() / consume()\nComunica com RabbitMQ.")
+
+    ' === MODELS / SCHEMAS (Apoio Lateral) ===
+    Component(pydantic, "Pydantic Models", "Pydantic v2", "Validação e serialização de dados.")
+    Component(orm, "SQLAlchemy Models", "SQLAlchemy 2.0", "Mapeamento ORM → PostgreSQL.")
+}
+
+' ─── 3. FUNDO: Containers de Suporte e Sistemas Externos ─────────────────────
+ContainerDb(postgres, "Banco de Dados Principal", "PostgreSQL 15", "Persistência de devedores,\nregras, jobs e comunicações.")
+ContainerDb(redis, "Cache / Session Store", "Redis", "Cache de sessões JWT e\nresultados temporários.")
+Container(broker, "Broker de Mensagens", "RabbitMQ · AMQP", "Fila durável para processamento\nassíncrono de lotes.")
+System_Ext(sendgrid, "SendGrid / AWS SES", "API de disparo\nde e-mails.")
+System_Ext(twilio, "Twilio / AWS SNS", "API de disparo\nde SMS.")
+
+' ─── RELAÇÕES (Forçando o fluxo para baixo com Rel_D) ────────────────────────
+
+' Frontend → Controllers
+Rel_D(frontend, batchRouter, "Requisições de Lotes", "JSON / HTTPS")
+Rel_D(frontend, rulesRouter, "Gerencia réguas", "JSON / HTTPS")
+Rel_D(frontend, jobsRouter, "Consulta métricas", "JSON / HTTPS")
+Rel_D(frontend, authRouter, "Login/Logout", "JSON / HTTPS")
+
+' Controllers → Services
+Rel_D(batchRouter, batchService, "Delega processamento")
+Rel_D(rulesRouter, notifService, "Delega configuração")
+Rel_D(jobsRouter, jobService, "Delega consulta")
+Rel_D(authRouter, authService, "Delega autenticação")
+
+' Services → Repositories
+Rel_D(batchService, batchRepo, "Persiste lotes/erros")
+Rel_D(notifService, debtorRepo, "Busca devedores")
+Rel_D(notifService, commRepo, "Registra disparos")
+Rel_D(jobService, commRepo, "Consulta histórico")
+
+' Services → Clients & Redis
+Rel_D(batchService, brokerClient, "Publica mensagem", "AMQP")
+Rel_D(notifService, emailClient, "Solicita e-mail", "HTTPS REST")
+Rel_D(notifService, smsClient, "Solicita SMS", "HTTPS REST")
+Rel_D(authService, redis, "Armazena sessões", "Redis protocol")
+
+' Repositories → Banco de Dados
+Rel_D(batchRepo, postgres, "Lê/Escreve", "SQL / ORM")
+Rel_D(debtorRepo, postgres, "Lê/Escreve", "SQL / ORM")
+Rel_D(commRepo, postgres, "Lê/Escreve", "SQL / ORM")
+
+' Clients → Sistemas Externos & Broker
+Rel_D(emailClient, sendgrid, "Envia e-mail", "HTTPS REST")
+Rel_D(smsClient, twilio, "Envia SMS", "HTTPS REST")
+Rel_D(brokerClient, broker, "Fila de lotes", "AMQP")
+
+' Models (Relações laterais para não quebrar a altura)
+Rel_R(batchRouter, pydantic, "Valida inputs")
+Rel_R(batchRepo, orm, "Mapeia entidades")
+
+@enduml

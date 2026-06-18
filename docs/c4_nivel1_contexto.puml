@@ -1,0 +1,35 @@
+@startuml C4_Nivel1_Contexto
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Diagrama de Contexto — Plataforma de Cobrança Automatizada [Nível 1]
+
+' ─── Pessoas / Usuários ───────────────────────────────────────────────────────
+Person(analista, "Analista de Cobrança", "Realiza importações de lotes e monitora\no status dos disparos via portal web.")
+
+Person(gestor, "Gestor Financeiro", "Configura a régua de cobrança e analisa\nmétrictas no dashboard.")
+
+Person(admin, "Administrador", "Gerencia usuários, permissões e\nconfigurações globais do sistema.")
+
+' ─── Sistema Central ──────────────────────────────────────────────────────────
+System(plataforma, "Plataforma de Cobrança Automatizada", "Portal web para gestão e automação\ndo ciclo de cobrança de inadimplentes.\nDisparos multicanal programados e monitorados.")
+
+' ─── Sistemas Externos ────────────────────────────────────────────────────────
+System_Ext(sendgrid, "SendGrid / AWS SES", "API de disparo de e-mails\ntransacionais.")
+
+System_Ext(twilio, "Twilio / AWS SNS", "API de disparo de SMS\ntransacionais.")
+
+System_Ext(prometheus, "Prometheus + Grafana", "Coleta e visualização de\nmétricas de observabilidade.")
+
+
+' ─── Relações ─────────────────────────────────────────────────────────────────
+Rel(analista,   plataforma, "Acessa o portal web.\nFaz upload de lotes CSV/Excel.", "HTTPS")
+Rel(gestor,     plataforma, "Configura a régua de cobrança\ne visualiza métricas no dashboard.", "HTTPS")
+Rel(admin,      plataforma, "Gerencia usuários e\npermissões de acesso.", "HTTPS")
+
+Rel(plataforma, sendgrid,   "Envia e-mails de cobrança\naos devedores.", "HTTPS / REST")
+Rel(plataforma, twilio,     "Envia SMS de cobrança\naos devedores.", "HTTPS / REST")
+Rel(plataforma, prometheus, "Expõe métricas de sistema\ne performance.", "HTTP /metrics")
+
+@enduml
