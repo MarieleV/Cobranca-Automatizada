@@ -35,6 +35,43 @@
 
 ---
 
+## Sumário
+* [1. Visão do Produto e Impacto](#1-visão-do-produto-e-impacto)
+  * [1.1 Contexto e Problema](#11-contexto-e-problema)
+  * [1.2 Origem da Demanda e Evidências](#12-origem-da-demanda-e-evidências)
+  * [1.3 Análise de Soluções Existentes (Benchmark)](#13-análise-de-soluções-existentes-benchmark)
+  * [1.4 Público-Alvo](#14-público-alvo)
+  * [1.5 Objetivos do Projeto](#15-objetivos-do-projeto)
+  * [1.6 Métricas de Sucesso (KPIs)](#16-métricas-de-sucesso-kpis)
+* [2. Engenharia de Requisitos](#2-engenharia-de-requisitos)
+  * [2.1 Personas](#21-personas)
+  * [2.2 Casos de Uso Principais](#22-casos-de-uso-principais)
+  * [2.3 Requisitos Funcionais](#23-requisitos-funcionais)
+  * [2.4 Requisitos Não Funcionais](#24-requisitos-não-funcionais)
+  * [2.5 Regras de Negócio](#25-regras-de-negócio)
+  * [2.6 Fora do Escopo](#26-fora-do-escopo)
+* [3. Fluxos e Comportamento do Sistema](#3-fluxos-e-comportamento-do-sistema)
+  * [3.1 Fluxo Principal — Ingestão e Validação de Lotes](#31-fluxo-principal--ingestão-e-validação-de-lotes)
+  * [3.2 Fluxo Secundário — Execução da Régua de Cobrança](#32-fluxo-secundário--execução-da-régua-de-cobrança)
+  * [3.3 Fluxos Alternativos e Exceções](#33-fluxos-alternativos-e-exceções)
+* [4. Mockups e Experiência do Usuário (UX)](#4-mockups-e-experiência-do-usuário-ux)
+  * [4.1 Fluxo de Navegação](#41-fluxo-de-navegação)
+  * [4.2 Descrição das Telas Principais](#42-descrição-das-telas-principais)
+  * [4.3 Fluxo de Interação — Importação de Lote](#43-fluxo-de-interação--importação-de-lote)
+* [5. Arquitetura do Sistema](#5-arquitetura-do-sistema)
+  * [5.1 Diagrama C4](#51-diagrama-c4)
+  * [5.2 Modelo de Dados](#52-modelo-de-dados)
+  * [5.3 Stack Tecnológica](#53-stack-tecnológica)
+* [6. Segurança e Privacidade](#6-segurança-e-privacidade)
+  * [6.1 Controles de Segurança](#61-controles-de-segurança)
+  * [6.2 Privacidade e LGPD](#62-privacidade-e-lgpd)
+* [7. Planejamento do Projeto](#7-planejamento-do-projeto)
+* [8. Referências](#8-referências)
+* [9. Apêndices](#9-apêndices)
+* [10. Parecer do Comitê de Avaliação](#10-parecer-do-comitê-de-avaliação)
+
+---
+
 ## 1. Visão do Produto e Impacto
 
 ### 1.1 Contexto e Problema
@@ -69,7 +106,7 @@ Foram analisadas as principais soluções disponíveis no mercado que se propõe
 
 
 **Diferencial do Projeto**
-Nenhuma das soluções analisadas oferece simultaneamente: (1) importação flexível de lotes via CSV/Excel com validação automatizada; (2) configuração visual da régua de cobrança por perfil de devedor; (3) execução de jobs programados com monitoramento em tempo real via dashboard. O projeto preenche essa lacuna com uma arquitetura moderna, open source e auditável.
+Nenhuma das soluções analisadas oferece simultaneamente: (1) importação flexível de lotes via CSV/Excel com validação automatizada; (2) configuration visual da régua de cobrança por perfil de devedor; (3) execução de jobs programados com monitoramento em tempo real via dashboard. O projeto preenche essa lacuna com uma arquitetura moderna, open source e auditável.
 
 ### 1.4 Público-Alvo
 O sistema é direcionado a empresas de médio porte, como cooperativas, varejistas, clínicas e prestadoras de serviço, que realizam a gestão interna de suas carteiras de inadimplentes. O usuário primário é o analista financeiro ou de cobrança, que possui nível intermediário de conhecimento tecnológico e utiliza a aplicação via navegador web. O perfil secundário engloba o gestor financeiro, responsável por acessar os dashboards de monitoramento e configurar os parâmetros estratégicos da régua de cobrança. Este projeto é desenvolvido em parceria com a Consulth Soluções Empresariais (CNPJ 33.536.315/0001-07), é uma empresa especializada em recuperação de crédito e cobrança B2B ( Business-to-Business ). Ela atua auxiliando outras empresas a negociarem e resgatarem valores de títulos em atraso, buscando acordos justos e sustentáveis entre credor e cliente.
